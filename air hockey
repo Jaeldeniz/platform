@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Air Hockey</title>
+  <style>
+    canvas { background: black; display: block; margin: auto; }
+  </style>
+</head>
+<body>
+<canvas id="game" width="600" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const puck = { x: 300, y: 200, radius: 15, dx: 4, dy: 3 };
+const paddle1 = { x: 300, y: 380, width: 80, height: 10 };
+const paddle2 = { x: 300, y: 10, width: 80, height: 10 };
+let score1 = 0, score2 = 0;
+
+// Mouse controls bottom paddle
+canvas.addEventListener("mousemove", e => {
+  let rect = canvas.getBoundingClientRect();
+  paddle1.x = e.clientX - rect.left - paddle1.width/2;
+});
+
+// Draw everything
+function draw() {
+  ctx.clearRect(0, 0, 600, 400);
+
+  // Draw puck
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(puck.x, puck.y, puck.radius, 0, Math.PI*2);
+  ctx.fill();
+
+  // Draw paddles
+  ctx.fillStyle = "red";
+  ctx.fillRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height);
+  ctx.fillStyle = "blue";
+  ctx.fillRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height);
+
+  // Draw score
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.fillText("Player: " + score1, 20, 30);
+  ctx.fillText("AI: " + score2, 500, 30);
+}
+
+// Update game logic
+function update() {
+  puck.x += puck.dx;
+  puck.y += puck.dy;
+
+  // Bounce walls
+  if (puck.x - puck.radius < 0 || puck.x + puck.radius > 600) puck.dx *= -1;
+  
+  // Paddle collisions
+  if (puck.y + puck.radius > paddle1.y &&
+      puck.x > paddle1.x && puck.x < paddle1.x + paddle1.width) {
+    puck.dy *= -1;
+  }
+
+  if (puck.y - puck.radius < paddle2.y + paddle2.height &&
+      puck.x > paddle2.x && puck.x < paddle2.x + paddle2.width) {
+    puck.dy *= -1;
+  }
+
+  // Bounce top and bottom (score)
+  if (puck.y - puck.radius < 0) { score1++; resetPuck(); }
+  if (puck.y + puck.radius > 400) { score2++; resetPuck(); }
+
+  // Simple AI for top paddle
+  if (puck.x < paddle2.x + paddle2.width/2) paddle2.x -= 3;
+  else paddle2.x += 3;
+}
+
+// Reset puck to center
+function resetPuck() {
+  puck.x = 300;
+  puck.y = 200;
+  puck.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+  puck.dy = 3 * (Math.random() > 0.5 ? 1 : -1);
+}
+
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
